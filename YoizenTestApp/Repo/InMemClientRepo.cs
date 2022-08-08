@@ -44,7 +44,7 @@ namespace YoizenTestApp.Repo
 
         public Client GetByName(string name)
         {
-            return _clients.Where(client => client.Name == name).SingleOrDefault();
+            return _clients.Where(client => client.Name == name).FirstOrDefault();
         }
 
         public IEnumerable<Client> GetAll()
@@ -56,6 +56,17 @@ namespace YoizenTestApp.Repo
         {
             throw new NotImplementedException();
         }
+        public Client ValidateUser(string email, string password)
+        {
+            return _clients.Where(client => client.Email == email && client.Password == password).SingleOrDefault();
+        }
+
+        //public bool ValidateUser(string email, string password)
+        //{
+        //    var user = _clients.Where(client => client.Email == email && client.Password == password).SingleOrDefault();
+
+        //    return user != null;
+        //}
 
     }
 }

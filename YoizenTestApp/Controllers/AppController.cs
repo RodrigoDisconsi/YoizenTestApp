@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YoizenTestApp.Dto;
 using YoizenTestApp.Models;
 using YoizenTestApp.Repo;
 
@@ -6,6 +8,7 @@ namespace YoizenTestApp.Controllers
 {
     [ApiController]
     [Route("app")]
+    [Authorize]
     public class AppController : Controller
     {
         private IRepo<Client> _repositoryClient;
@@ -17,32 +20,35 @@ namespace YoizenTestApp.Controllers
             _repositoryPolicy = repositoryPolicy;
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetClientById(Guid id)
+        [HttpGet("{id}"), Authorize(Roles = "admin,user")]
+        public async Task<IActionResult> GetClientById(Guid id)
         {
             var client = _repositoryClient.Get(id);
             if(client == null)
                 return NotFound();
-            return Ok(client);
+            var clientDto = (ClientDto)client;
+            return Ok(clientDto);
         }
 
-        [HttpGet("ClientByName/{name}")]
-        public IActionResult GetClientByName(string name)
+        [HttpGet("ClientByName/{name}"), Authorize(Roles = "admin,user")]
+        public async Task<IActionResult> GetClientByName(string name)
         {
             var client = ((InMemClientRepo)_repositoryClient).GetByName(name);
             if (client == null)
                 return NotFound();
-            return Ok(client);
+            var clientDto = (ClientDto)client;
+            return Ok(clientDto);
         }
 
-        [HttpGet("PoliciesByClientName/{name}")]
-        public IActionResult GetPoliciesByClientName(string name)
+        [HttpGet("PoliciesByClientName/{name}"), Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetPoliciesByClientName(string name)
         {
             var client = ((InMemClientRepo)_repositoryClient).GetByName(name);
             if (client == null)
                 return NotFound("Not found client");
-            var policies = ((InMemPolicyRepo)_repositoryPolicy).GetByClient(client.Id);
-
+            var policies = ((InMemPolicyRepo)_repositoryPolicy).GetByClient(client.Id).Select(policies => (PolicyDto)policies);
+            if (policies == null)
+                return NotFound("Not found policies for that client");
 
             return Ok(policies);
         }
